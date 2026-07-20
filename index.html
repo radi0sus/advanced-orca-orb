@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>orca_orb web</title>
+  <link rel="stylesheet" href="static/css/style.css" />
+</head>
+<body>
+
+  <header class="app-header">
+    <h1>orca_orb web</h1>
+    <div id="dropzone" class="dropzone">
+      <span>Open or drop an ORCA output file (containing a LOEWDIN REDUCED ORBITAL POPULATIONS PER MO section)</span>
+      <input type="file" id="file-input" accept=".out,.log,.txt" hidden />
+    </div>
+    <div id="file-meta" class="file-meta"></div>
+  </header>
+
+  <div id="warning-banner" class="warning-banner"></div>
+
+  <div id="busy-overlay" class="busy-overlay" aria-live="polite" aria-hidden="true">
+    <div class="busy-box">
+      <div class="busy-spinner"></div>
+      <div class="busy-text">Updating…</div>
+    </div>
+  </div>
+
+  <div id="controls-bar" class="controls-bar">
+    <div class="control-group">
+      <span class="filter-label">Orbital window</span>
+      <div class="range-buttons">
+        <button class="btn-small" data-range-preset="5">HOMO±5</button>
+        <button class="btn-small active" data-range-preset="10">HOMO±10</button>
+        <button class="btn-small" data-range-preset="25">HOMO±25</button>
+        <button class="btn-small" data-range-preset="50">HOMO±50</button>
+        <button class="btn-small" data-range-preset="all">All</button>
+      </div>
+      <span class="filter-label">from</span>
+      <input type="number" id="range-start-input" class="range-num-input" />
+      <span class="filter-label">to</span>
+      <input type="number" id="range-end-input" class="range-num-input" />
+    </div>
+
+    <div class="control-group" id="spin-group" style="display:none;">
+      <span class="filter-label">Spin</span>
+      <div class="range-buttons">
+        <button class="btn-small active" data-spin="0">Alpha</button>
+        <button class="btn-small" data-spin="1">Beta</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="filter-label" for="threshold-slider">Threshold</label>
+      <input type="range" id="threshold-slider" min="0" max="50" step="0.5" value="5" />
+      <input type="number" id="threshold-number" class="range-num-input" min="0" max="50" step="0.5" value="5" />
+      <span id="threshold-label" class="filter-label">5%</span>
+    </div>
+
+    <span id="range-status" class="spin-badge"></span>
+
+    <div class="export-buttons">
+      <button id="export-csv" class="btn-small">Raw data (CSV)</button>
+      <button id="export-report" class="btn-small">Analysis report (TXT)</button>
+    </div>
+  </div>
+
+  <div id="empty-state" class="empty-state">
+    No file loaded yet. Drop or select an ORCA output file containing a Loewdin population analysis section above.
+  </div>
+
+  <main id="app-main" class="app-main">
+
+    <section class="panel viewer-panel" id="viewer-panel">
+      <div class="panel-toolbar">
+        <button id="reset-view" class="btn-small">Reset view</button>
+        <span class="toolbar-divider"></span>
+        <label class="filter-label" for="bond-tolerance">Bond radius</label>
+        <input type="range" id="bond-tolerance" min="0" max="30" step="1" value="8" />
+        <span id="bond-tolerance-label" class="filter-label">8%</span>
+      </div>
+
+      <div class="panel-toolbar" id="selection-row" style="display:none;">
+        <button id="clear-selection" class="btn-small">Clear selection</button>
+        <div id="selection-chips" class="chips"></div>
+      </div>
+
+      <div class="panel-toolbar" id="element-pill-row">
+        <span class="filter-label">Constraint by element</span>
+        <div id="element-pills" class="chips"></div>
+      </div>
+
+      <div id="viewer-3d" class="viewer-3d">
+        <div id="viewer-legend" class="viewer-legend"></div>
+      </div>
+
+      <div class="atom-list-panel" id="atom-list-panel">
+        <div class="atom-list-header">
+          <span class="atom-list-title">Atoms</span>
+          <input type="text" id="atom-search" placeholder="Search element or number…" autocomplete="off" />
+        </div>
+
+        <div class="atom-list-wrap">
+          <table class="atom-list-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>El.</th>
+                <th>x</th>
+                <th>y</th>
+                <th>z</th>
+              </tr>
+            </thead>
+            <tbody id="atom-list-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel content-panel" id="content-panel">
+      <div class="panel-toolbar tab-bar">
+        <button id="tab-elements" class="btn-small active" data-tab="elements">Elements</button>
+        <button id="tab-atoms" class="btn-small" data-tab="atoms">Atoms</button>
+        <button id="tab-aodetail" class="btn-small" data-tab="aodetail">AO heatmaps</button>
+        <button id="tab-table" class="btn-small" data-tab="table">Atom data</button>
+        <button id="tab-aotable" class="btn-small" data-tab="aotable">AO data</button>
+      </div>
+
+      <div class="table-scroll tab-pane" id="pane-elements">
+        <div id="element-bar-plot" class="plot-block"></div>
+      </div>
+
+      <div class="table-scroll tab-pane" id="pane-atoms" style="display:none;">
+        <div id="atom-heatmap-plot" class="plot-block"></div>
+      </div>
+
+      <div class="table-scroll tab-pane" id="pane-aodetail" style="display:none;">
+        <div id="ao-heatmap-container"></div>
+      </div>
+
+      <div class="table-scroll tab-pane" id="pane-table" style="display:none;">
+        <table class="data-table">
+          <thead id="atom-table-head"></thead>
+          <tbody id="atom-table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="table-scroll tab-pane" id="pane-aotable" style="display:none;">
+        <div class="panel-toolbar">
+          <span class="panel-title">AO breakdown of selected atom(s)</span>
+        </div>
+
+        <div id="ao-detail-empty" class="aodetail-empty"></div>
+
+        <table class="data-table" id="ao-detail-table" style="display:none;">
+          <thead id="ao-detail-head"></thead>
+          <tbody id="ao-detail-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="static/vendor/3dmol.min.js"></script>
+  <script src="static/vendor/plotly-2.35.2.min.js"></script>
+  <script src="static/js/orca-import.js"></script>
+  <script src="static/js/chem.js"></script>
+  <script src="static/js/viewer.js"></script>
+  <script src="static/js/aggregate.js"></script>
+  <script src="static/js/plots.js"></script>
+  <script src="static/js/export.js"></script>
+  <script src="static/js/ui.js"></script>
+  <script src="static/js/app.js"></script>
+</body>
+</html>
