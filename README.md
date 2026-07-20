@@ -1,14 +1,15 @@
-# orca_orb web
+# Advanced ORCA Orb
 
 A browser-based, static web app for analyzing the
 `LOEWDIN REDUCED ORBITAL POPULATIONS PER MO` section of ORCA output files.
 No server, no build step, no dependencies to install - just open
 `index.html` (double-click or drag & drop works, including via `file://`).
 
-Based on [`orca_orb.py`](https://github.com/radi0sus/orca_orb) (Sebastian
-Dechert, 2019).
+Based on [`orca_orb.py`](https://github.com/radi0sus/orca_orb).  
 
 ## Required ORCA input
+
+ORCA: [https://orcaforum.kofo.mpg.de/](https://orcaforum.kofo.mpg.de/)  
 
 The reduced orbital population section is not printed by ORCA by default.
 Request it with **either**:
@@ -65,24 +66,17 @@ are parsed in one pass, no matter which orbital window you later select.
   (TXT) - both reflect exactly the threshold, constraints, and orbital
   window currently set in the UI.
 
-## Structure
+## 3Dmol.js license, citation and Plotly license
 
-```
-├── index.html
-├── LICENSE
-├── README.md
-└── static
-    ├── css/style.css
-    ├── js
-    │   ├── app.js            Orchestration / app state / tab switching
-    │   ├── orca-import.js    Loewdin parser (state machine) + geometry
-    │   ├── aggregate.js      Sums / filtering / constraints / orbital range
-    │   ├── plots.js          Plotly bar chart + heatmaps (elements, atoms, AO)
-    │   ├── chem.js           Element colors / covalent radii / bond detection
-    │   ├── viewer.js         3Dmol.js wrapper (atom selection, halo highlight)
-    │   ├── ui.js             Table / atom list rendering
-    │   └── export.js         CSV / TXT export
-    └── vendor
-        ├── 3dmol.min.js
-        └── plotly-2.35.2.min.js
-```
+3Dmol.js is licensed under a permissive BSD-3-Clause license (see
+`static/vendor/3dmol.LICENSE`).
+
+Please cite:
+
+> Rego, N. and Koes, D. (2015).
+> 3Dmol.js: molecular visualization with WebGL.
+> *Bioinformatics*, 31(8), 1322–1324.
+> https://academic.oup.com/bioinformatics/article/31/8/1322/213186
+
+The plots are rendered with [Plotly.js](https://plotly.com/javascript/)
+(MIT license, see `static/vendor/plotly.LICENSE`).
