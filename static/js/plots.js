@@ -518,9 +518,32 @@ window.ORBWEB_PLOTS = (() => {
     Promise.all(plotPromises).then(() => unfreezeHeight(containerEl));
   }
 
+  // Plotly bakes font/hoverlabel colors into the figure at draw time
+  // (see baseLayout()). They don't magically follow CSS variables when
+  // the OS switches light/dark, because Plotly never re-reads the CSS
+  // after newPlot(). A relayout() with the freshly computed theme colors
+  // is enough to fix them without a full redraw (keeps zoom/pan state).
+  function applyTheme(divs) {
+    if (!window.Plotly) return;
+
+    const c = themeColors();
+
+    divs.forEach((el) => {
+      if (!el || !el.data) return;
+
+      Plotly.relayout(el, {
+        "font.color": c.text,
+        "hoverlabel.bgcolor": c.panel,
+        "hoverlabel.bordercolor": c.border,
+        "hoverlabel.font.color": c.text
+      });
+    });
+  }
+
   return {
     renderElementBar,
     renderAtomHeatmap,
-    renderAoHeatmaps
+    renderAoHeatmaps,
+    applyTheme
   };
 })();

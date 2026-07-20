@@ -234,6 +234,15 @@ window.ORBWEB_APP = (() => {
       if (viewerInitialized) Viewer.updateBackgroundColor();
 
       render3D();
+
+      // Update every plot, not just the one in the active tab - the
+      // others are only display:none, not destroyed, and would still
+      // show stale colors when the user switches back to them.
+      Plots.applyTheme([
+        el.elementBarPlot,
+        el.atomHeatmapPlot,
+        ...el.aoHeatmapContainer.querySelectorAll(".ao-heatmap")
+      ]);
     });
   }
 
