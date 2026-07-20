@@ -16,7 +16,7 @@ Request it with **either**:
 
 ```
 %output
-  Print[ P_ReducedOrbPopMO_M ]  1  # default = on
+  Print[ P_ReducedOrbPopMO_L ]  1  # default = on
 end
 ```
 
