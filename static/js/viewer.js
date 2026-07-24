@@ -89,6 +89,19 @@ window.ORBWEB_VIEWER = (() => {
       const depth = (axis.rotated.z + 1) / 2; // 0 (far) .. 1 (near)
       const alpha = 0.55 + depth * 0.45;
 
+      // Cap the arrowhead length to a fraction of THIS axis's own
+      // projected (screen-space) length, not a fixed pixel value - a
+      // strongly foreshortened axis can project to only a few pixels,
+      // and a fixed head length would then swallow the whole shaft (or
+      // even overshoot past the origin), leaving no visible line and
+      // making the head look like it's sitting at the wrong end instead
+      // of capping off a visible shaft.
+      const projLen = Math.hypot(endX - cx, endY - cy);
+      const headLen = Math.min(7, projLen * 0.45);
+      const angle = Math.atan2(endY - cy, endX - cx);
+      const shaftEndX = endX - headLen * Math.cos(angle);
+      const shaftEndY = endY - headLen * Math.sin(angle);
+
       gizmoCtx.globalAlpha = alpha;
       gizmoCtx.strokeStyle = axis.color;
       gizmoCtx.fillStyle = axis.color;
@@ -96,11 +109,9 @@ window.ORBWEB_VIEWER = (() => {
 
       gizmoCtx.beginPath();
       gizmoCtx.moveTo(cx, cy);
-      gizmoCtx.lineTo(endX, endY);
+      gizmoCtx.lineTo(shaftEndX, shaftEndY);
       gizmoCtx.stroke();
 
-      const angle = Math.atan2(endY - cy, endX - cx);
-      const headLen = 7;
       gizmoCtx.beginPath();
       gizmoCtx.moveTo(endX, endY);
       gizmoCtx.lineTo(
