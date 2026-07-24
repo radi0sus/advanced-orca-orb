@@ -32,7 +32,7 @@ window.ORBWEB_APP = (() => {
     aoSortKey: "sum",
     aoSortDir: "desc",
     atomSearch: "",
-    oneBasedIndex: false,   // fixed - ORCA itself numbers atoms from 0 (Cu0, N1, ...)
+    oneBasedIndex: false,   // false = ORCA's native numbering (Cu0, N1, ...); toggled via UI
     displaySpin: 0          // 0 = alpha, 1 = beta (only relevant if data.spin === 1)
   };
 
@@ -66,6 +66,7 @@ window.ORBWEB_APP = (() => {
     elementPills: document.getElementById("element-pills"),
     atomSearch: document.getElementById("atom-search"),
     atomListBody: document.getElementById("atom-list-body"),
+    oneBasedToggle: document.getElementById("one-based-toggle"),
 
     tableHead: document.getElementById("atom-table-head"),
     tableBody: document.getElementById("atom-table-body"),
@@ -217,6 +218,15 @@ window.ORBWEB_APP = (() => {
       state.atomSearch = el.atomSearch.value.trim().toLowerCase();
 
       UI.renderAtomList(el, state);
+    });
+
+    el.oneBasedToggle.addEventListener("change", () => {
+      state.oneBasedIndex = el.oneBasedToggle.checked;
+
+      // Atom labels feed into the atom list, plots, AO detail table and
+      // export text, so a full re-render is needed to keep everything in
+      // sync with the new numbering.
+      renderAll();
     });
 
     window.addEventListener("resize", () => {
@@ -481,10 +491,13 @@ window.ORBWEB_APP = (() => {
         el.appMain.style.display = "grid";
         el.spinGroup.style.display = data.spin === 1 ? "flex" : "none";
 
-        el.fileMeta.textContent =
-          `${file.name} \u2014 ${data.rows.length.toLocaleString()} contributions, ` +
-          `${data.totNumOrbA + 1} orbitals${data.spin === 1 ? " (open shell)" : ""}, HOMO = ${data.homoNum}` +
-          (data.geometry.length === 0 ? " \u2014 no geometry found (3D view disabled)" : ` \u2014 ${data.geometry.length} atoms`);
+        el.fileMeta.textContent = [
+          file.name,
+          `${data.rows.length.toLocaleString()} contributions`,
+          `${data.totNumOrbA + 1} orbitals${data.spin === 1 ? " (open shell)" : ""}`,
+          `HOMO = ${data.homoNum}`,
+          data.geometry.length === 0 ? "no geometry found (3D view disabled)" : `${data.geometry.length} atoms`
+        ].join(" \u00b7 ");
 
         renderElementPills();
 

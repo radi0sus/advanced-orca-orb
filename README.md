@@ -48,7 +48,10 @@ are parsed in one pass, no matter which orbital window you later select.
 - **Atom selection**: click atoms in the 3D viewer or in the atom list
   (left panel) to select them; selection is synchronized both ways and
   drives the AO detail view. A search box filters the atom list by element
-  or atom number.
+  or atom number. A **1-based** toggle switches atom numbering between
+  ORCA's native 0-based scheme (Cu0, C1, ...) and a 1-based scheme
+  (Cu1, C2, ...); this affects every atom label throughout the app -
+  viewer, atom list, charts, tables and export.
 - **Elements tab**: a stacked horizontal bar chart showing, for each
   orbital in the current window, how much each element contributes.
 - **Atoms tab**: a heatmap of per-atom contributions across the orbital

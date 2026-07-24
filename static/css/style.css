@@ -237,6 +237,14 @@ input[type="text"]:focus, input[type="number"]:focus { border-color: var(--accen
 }
 .atom-list-empty { padding: 10px 8px; color: var(--muted); font-size: 0.8rem; }
 
+.one-based-toggle {
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+  font-size: 0.76rem; color: var(--muted); white-space: nowrap; cursor: pointer;
+  user-select: none;
+}
+.one-based-toggle input[type="checkbox"] { margin: 0; cursor: pointer; }
+.one-based-toggle:hover { color: var(--text); }
+
 .table-scroll { overflow: auto; flex: 1; }
 
 .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
