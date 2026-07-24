@@ -60,6 +60,7 @@ window.ORBWEB_APP = (() => {
     resetViewBtn: document.getElementById("reset-view"),
     bondTolerance: document.getElementById("bond-tolerance"),
     bondToleranceLabel: document.getElementById("bond-tolerance-label"),
+    axesToggle: document.getElementById("axes-toggle"),
     clearSelectionBtn: document.getElementById("clear-selection"),
     selectionChips: document.getElementById("selection-chips"),
     selectionRow: document.getElementById("selection-row"),
@@ -196,6 +197,10 @@ window.ORBWEB_APP = (() => {
     });
 
     el.resetViewBtn.addEventListener("click", () => Viewer.resetView());
+
+    el.axesToggle.addEventListener("change", () => {
+      Viewer.setAxesEnabled(el.axesToggle.checked);
+    });
 
     el.bondTolerance.addEventListener("input", () => {
       const pct = parseInt(el.bondTolerance.value, 10);

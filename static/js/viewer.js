@@ -22,6 +22,119 @@ window.ORBWEB_VIEWER = (() => {
   let hasZoomed = false;
   let onAtomClick = null;
 
+  // --- Orientation gizmo (small XYZ axis indicator, rotates with the model) ---
+  let gizmoEnabled = false;
+  let gizmoCanvas = null;
+  let gizmoCtx = null;
+
+  // "Home" (unrotated) axis directions: the actual molecule-frame unit
+  // vectors (1,0,0)/(0,1,0)/(0,0,1), NOT a stylized/isometric remap. This
+  // matters: the whole point of the gizmo is to let you check "is this
+  // atom really out along -z" against the atom table's x/y/z columns, so
+  // it has to track 3Dmol's real coordinate convention 1:1 - molecule +x
+  // is screen-right, +y is screen-up, +z points out of the screen towards
+  // the viewer, all before any rotation. The live model rotation
+  // quaternion (from viewer.getView()) is applied on top of these every
+  // frame, since rotationGroup is the parent of modelGroup in 3Dmol's
+  // scene graph (i.e. screen_vec = R(q) * molecule_vec).
+  const GIZMO_HOME = {
+    x: { x: 1, y: 0, z: 0 },
+    y: { x: 0, y: 1, z: 0 },
+    z: { x: 0, y: 0, z: 1 }
+  };
+  const GIZMO_COLORS = { x: "#e6483c", y: "#2fae4e", z: "#2f8fe6" };
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function quatRotate(q, v) {
+    const tx = 2 * (q.y * v.z - q.z * v.y);
+    const ty = 2 * (q.z * v.x - q.x * v.z);
+    const tz = 2 * (q.x * v.y - q.y * v.x);
+    return {
+      x: v.x + q.w * tx + (q.y * tz - q.z * ty),
+      y: v.y + q.w * ty + (q.z * tx - q.x * tz),
+      z: v.z + q.w * tz + (q.x * ty - q.y * tx)
+    };
+  }
+
+  function drawGizmo() {
+    if (!gizmoEnabled || !gizmoCtx || !viewer) return;
+
+    const view = viewer.getView();
+    // getView(): [posX, posY, posZ, dist, q.x, q.y, q.z, q.w, ...]
+    const q = { x: view[4], y: view[5], z: view[6], w: view[7] };
+
+    const w = gizmoCanvas.width;
+    const h = gizmoCanvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const len = Math.min(w, h) * 0.27;
+    const pad = 9;
+
+    gizmoCtx.clearRect(0, 0, w, h);
+
+    const axes = ["x", "y", "z"].map((key) => {
+      const rotated = quatRotate(q, GIZMO_HOME[key]);
+      return { key, rotated, color: GIZMO_COLORS[key] };
+    });
+
+    // Draw back-to-front so nearer axes overlap farther ones.
+    axes.sort((a, b) => a.rotated.z - b.rotated.z);
+
+    for (const axis of axes) {
+      const endX = cx + axis.rotated.x * len;
+      const endY = cy - axis.rotated.y * len;
+      const depth = (axis.rotated.z + 1) / 2; // 0 (far) .. 1 (near)
+      const alpha = 0.55 + depth * 0.45;
+
+      gizmoCtx.globalAlpha = alpha;
+      gizmoCtx.strokeStyle = axis.color;
+      gizmoCtx.fillStyle = axis.color;
+      gizmoCtx.lineWidth = 2.5;
+
+      gizmoCtx.beginPath();
+      gizmoCtx.moveTo(cx, cy);
+      gizmoCtx.lineTo(endX, endY);
+      gizmoCtx.stroke();
+
+      const angle = Math.atan2(endY - cy, endX - cx);
+      const headLen = 7;
+      gizmoCtx.beginPath();
+      gizmoCtx.moveTo(endX, endY);
+      gizmoCtx.lineTo(
+        endX - headLen * Math.cos(angle - Math.PI / 6),
+        endY - headLen * Math.sin(angle - Math.PI / 6)
+      );
+      gizmoCtx.lineTo(
+        endX - headLen * Math.cos(angle + Math.PI / 6),
+        endY - headLen * Math.sin(angle + Math.PI / 6)
+      );
+      gizmoCtx.closePath();
+      gizmoCtx.fill();
+
+      gizmoCtx.font = "600 11px sans-serif";
+      gizmoCtx.textAlign = "center";
+      gizmoCtx.textBaseline = "middle";
+      const labelX = clamp(cx + axis.rotated.x * (len + 13), pad, w - pad);
+      const labelY = clamp(cy - axis.rotated.y * (len + 13), pad, h - pad);
+      gizmoCtx.fillText(axis.key.toUpperCase(), labelX, labelY);
+    }
+
+    gizmoCtx.globalAlpha = 1;
+  }
+
+  function setAxesEnabled(enabled) {
+    gizmoEnabled = enabled;
+    if (!gizmoCanvas) {
+      gizmoCanvas = document.getElementById("axes-gizmo");
+      gizmoCtx = gizmoCanvas ? gizmoCanvas.getContext("2d") : null;
+    }
+    if (gizmoCanvas) gizmoCanvas.classList.toggle("visible", enabled);
+    if (enabled) drawGizmo();
+  }
+
   function init(containerId) {
     const el = document.getElementById(containerId);
     const css = getComputedStyle(document.documentElement);
@@ -29,6 +142,7 @@ window.ORBWEB_VIEWER = (() => {
     if (bg.startsWith("#")) bg = "0x" + bg.slice(1);
 
     viewer = $3Dmol.createViewer(el, { backgroundColor: bg, antialias: true });
+    viewer.setViewChangeCallback(drawGizmo);
   }
 
   function setAtomClickCallback(fn) {
@@ -136,6 +250,7 @@ window.ORBWEB_VIEWER = (() => {
 
     viewer.render();
     renderLegend(elements);
+    drawGizmo();
   }
 
   function renderLegend(elements) {
@@ -158,7 +273,8 @@ window.ORBWEB_VIEWER = (() => {
     viewer.zoomTo();
     viewer.zoom(0.8);
     viewer.render();
+    drawGizmo();
   }
 
-  return { init, load, render, resize, resetView, setAtomClickCallback, setBondTolerance, updateBackgroundColor };
+  return { init, load, render, resize, resetView, setAtomClickCallback, setBondTolerance, updateBackgroundColor, setAxesEnabled };
 })();

@@ -64,7 +64,10 @@ are parsed in one pass, no matter which orbital window you later select.
 - **3D viewer**: 3Dmol.js-based structure view with adjustable bond
   detection tolerance, atom halo highlighting for the current selection,
   and a consistent color per element shared with every other view in the
-  app (pills, atom list, charts).
+  app (pills, atom list, charts). A **Show axes** toggle overlays a small
+  X/Y/Z axis indicator (red/green/blue) in the corner of the viewport,
+  tracking the real molecule-frame axes as you rotate the structure - so
+  it can be checked directly against the x/y/z columns in the atom table.
 - **Export**: the raw parsed data as CSV, or a full text analysis report
   (TXT) - both reflect exactly the threshold, constraints, and orbital
   window currently set in the UI.

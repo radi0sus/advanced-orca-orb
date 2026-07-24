@@ -78,6 +78,12 @@
         <label class="filter-label" for="bond-tolerance">Bond radius</label>
         <input type="range" id="bond-tolerance" min="0" max="30" step="1" value="8" />
         <span id="bond-tolerance-label" class="filter-label">8%</span>
+        <span class="toolbar-divider"></span>
+        <label class="toggle-switch" for="axes-toggle">
+          <input type="checkbox" id="axes-toggle" />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text">Show axes</span>
+        </label>
       </div>
 
       <div class="panel-toolbar" id="selection-row" style="display:none;">
@@ -92,15 +98,17 @@
 
       <div id="viewer-3d" class="viewer-3d">
         <div id="viewer-legend" class="viewer-legend"></div>
+        <canvas id="axes-gizmo" class="axes-gizmo" width="108" height="108"></canvas>
       </div>
 
       <div class="atom-list-panel" id="atom-list-panel">
         <div class="atom-list-header">
           <span class="atom-list-title">Atoms</span>
           <input type="text" id="atom-search" placeholder="Search element or number…" autocomplete="off" />
-          <label class="one-based-toggle" for="one-based-toggle" title="Number atoms starting at 1 (Cu1, C2, …) instead of ORCA's native 0-based numbering (Cu0, C1, …)">
+          <label class="toggle-switch" for="one-based-toggle" title="Number atoms starting at 1 (Cu1, C2, …) instead of ORCA's native 0-based numbering (Cu0, C1, …)">
             <input type="checkbox" id="one-based-toggle" />
-            <span>1-based</span>
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-text">1-based</span>
           </label>
         </div>
 
